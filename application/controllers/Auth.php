@@ -3,13 +3,6 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class Auth extends CI_Controller
 {
-    // untuk memanggil parrent __construct
-    public function __construct()
-    {
-        parent::__construct();
-        $this->load->library('form_validation');
-        $this->load->model('User_model');
-    }
 
     // untuk methdoe dafault Auth dan sekaligus halaman login
     public function index()
