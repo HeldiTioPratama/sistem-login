@@ -45,4 +45,33 @@ class Menu extends CI_Controller
         </div>');
         redirect('menu');
     }
+
+    public function subMenu()
+    {
+        //untuk profile nanti
+        $data['user'] = $this->db->get_where('user', ['email' => $this->session->userdata('email')])->row_array();
+
+        //untuk heading
+        $data['title'] = 'SubMenu Management';
+
+        // ambil data user_menu
+        $data['menu'] = $this->db->get('user_menu')->result_array();
+        //ambil data user_sub_menu
+        $data['subMenu'] = $this->MenuManagement_model->subMenu();
+
+        $this->form_validation->set_rules('title', 'Title', 'required');
+        $this->form_validation->set_rules('menu_id', 'Menu', 'required');
+        $this->form_validation->set_rules('url', 'Url', 'required');
+        $this->form_validation->set_rules('icon', 'Icon', 'required');
+
+        if ($this->form_validation->run() == false) {
+            $this->load->view('template/header', $data);
+            $this->load->view('template/sidebar', $data);
+            $this->load->view('template/topbar', $data);
+            $this->load->view('menu/submenu', $data);
+            $this->load->view('template/copyright', $data);
+            $this->load->view('template/footer');
+        } else {
+        }
+    }
 }

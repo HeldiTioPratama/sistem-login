@@ -12,6 +12,9 @@
 <!-- End of Content Wrapper -->
 
 </div>
+<!-- End of Main Content -->
+
+</div>
 <!-- End of Page Wrapper -->
 
 <!-- Scroll to Top Button-->
