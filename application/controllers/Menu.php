@@ -55,7 +55,7 @@ class Menu extends CI_Controller
         $data['title'] = 'SubMenu Management';
 
         // ambil data user_menu
-        $data['menu'] = $this->db->get('user_menu')->result_array();
+        $data['menu'] = $this->MenuManagement_model->getMenu();
         //ambil data user_sub_menu
         $data['subMenu'] = $this->MenuManagement_model->subMenu();
 
@@ -72,6 +72,12 @@ class Menu extends CI_Controller
             $this->load->view('template/copyright', $data);
             $this->load->view('template/footer');
         } else {
+            $this->MenuManagement_model->addSubMenu();
+
+            $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">
+            Add SubMenu success
+            </div>');
+            redirect('menu');
         }
     }
 }

@@ -76,8 +76,8 @@
                         <input type="text" class="form-control" id="title" name="title" placeholder="SubMenu name">
                     </div>
                     <div class="form-group">
-                        <label for="menu_id">Menu</label>
-                        <select class="form-control" id="menu_id" name="menu_id">
+                        <label for="menuid">Menu</label>
+                        <select class="form-control" id="menuid" name="menu_id">
                             <option value="">Select Menu</option>
                             <?php foreach ($menu as $m) : ?>
                                 <option value="<?= $m['id'] ?>"><?= $m['menu'] ?></option>
