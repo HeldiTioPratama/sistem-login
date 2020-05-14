@@ -23,13 +23,6 @@
                     </div>
                     <div class="sidebar-brand-text mx-3">Member</div>
                 </a>
-                <!-- ini home untuk member -->
-                <hr class="sidebar-divider">
-                <li class="nav-item">
-                    <a class="nav-link" href="<?= base_url('member') ?>">
-                        <i class="fas fa-fw fa-home"></i>
-                        <span>Home</span> </a>
-                </li>
             <?php endif ?>
             <!-- Query untuk menampilkan menu -->
             <?php
@@ -55,9 +48,19 @@
                 <hr class="sidebar-divider">
 
                 <!-- Heading -->
-                <div class="sidebar-heading">
-                    <?= $m['menu'] ?>
-                </div>
+                <?php if ($m['menu'] == 'Member') : ?>
+                    <div class="sidebar-heading">
+                        Fitur
+                    </div>
+                <?php elseif ($m['menu'] == 'Admin') : ?>
+                    <div class="sidebar-heading">
+                        Core
+                    </div>
+                <?php else : ?>
+                    <div class="sidebar-heading">
+                        <?= $m['menu'] ?>
+                    </div>
+                <?php endif ?>
 
                 <!-- Query Sub-Menu -->
                 <?php $subMenu = $this->db->get_where('user_sub_menu', ['menu_id' => $m["id"]])->result_array();

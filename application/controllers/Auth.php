@@ -138,4 +138,20 @@ class Auth extends CI_Controller
 
         redirect('auth');
     }
+
+    public function blocked()
+    {
+        $data['title'] = 'Access Forbidden';
+
+        if ($this->session->userdata['role_id'] == 1) {
+            $data['redirect'] = 'admin';
+        } else {
+            $data['redirect'] = 'member';
+        }
+
+
+        $this->load->view('template/header', $data);
+        $this->load->view('auth/blocked', $data);
+        $this->load->view('template/footer');
+    }
 }
