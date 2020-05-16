@@ -1,5 +1,6 @@
 <?php
 
+// untuk cek akses tiap user, dan dijalankan pada setiap controller kec auth
 function check_access()
 {
     $ci = get_instance();
@@ -24,7 +25,21 @@ function check_access()
         // dicari apakah ada baris yang cocok saat query userAccess, jika user masukan url dan gada maka gaboleh
         if ($userAccess->num_rows() < 1) {
             redirect('auth/blocked');
-        } else {
         }
+    }
+}
+
+// untuk menampilkan checkbox pada role access
+function role_access($roleId, $menuId)
+{
+    $ci = get_instance();
+
+    $roleAccess = $ci->db->get_where('user_access_menu', [
+        'role_id' => $roleId,
+        'menu_id' => $menuId
+    ]);
+
+    if ($roleAccess->num_rows() > 0) {
+        return "checked = 'checked'";
     }
 }

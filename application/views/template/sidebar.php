@@ -45,19 +45,19 @@
             <!-- LOOPING menu -->
             <?php foreach ($menu as $m) : ?>
                 <!-- Divider -->
-                <hr class="sidebar-divider">
+                <hr class="sidebar-divider mt-3">
 
                 <!-- Heading -->
                 <?php if ($m['menu'] == 'Member') : ?>
-                    <div class="sidebar-heading">
+                    <div class="sidebar-heading mb-n1">
                         Fitur
                     </div>
                 <?php elseif ($m['menu'] == 'Admin') : ?>
-                    <div class="sidebar-heading">
+                    <div class="sidebar-heading mb-n1">
                         Core
                     </div>
                 <?php else : ?>
-                    <div class="sidebar-heading">
+                    <div class="sidebar-heading mb-n1">
                         <?= $m['menu'] ?>
                     </div>
                 <?php endif ?>
@@ -71,16 +71,16 @@
                         <?php else : ?>
                         <li class="nav-item">
                         <?php endif ?>
-                        <a class="nav-link" href="<?= $sub['url'] ?>">
+                        <a class="nav-link pb-0" href="<?= base_url() . $sub['url'] ?>">
                             <i class="<?= $sub['icon'] ?>"></i>
                             <span><?= $sub['title'] ?></span> </a> </li>
                     <?php endforeach ?>
                 <?php endforeach ?>
                 <!-- Divider -->
-                <hr class="sidebar-divider d-none d-md-block">
+                <hr class="sidebar-divider d-none d-md-block mt-3 mb-2">
                 <!-- Nav Item - Tables -->
                 <li class="nav-item">
-                    <a class="nav-link" href="<?= base_url('auth/logout') ?>" data-toggle="modal" data-target="#logoutModal">
+                    <a class="nav-link pb-3 pt-1" href="<?= base_url('auth/logout') ?>" data-toggle="modal" data-target="#logoutModal">
                         <i class="fas fa-sign-out-alt fa-fw"></i>
                         <span>Logout</span></a>
                 </li>
