@@ -35,23 +35,34 @@ class Menu extends CI_Controller
         }
     }
 
-    public function delete($id)
+
+    public function getMenu()
     {
-        $this->MenuManagement_model->delete($id);
+        // echo json_encode($this->db->get_where('user_menu', ['id' => $this->input->post('id')])->row_array());
+        echo json_encode($this->db->get_where('user_menu', ['id' => $this->input->post_get('id')])->row_array());
+    }
+
+    public function editMenu()
+    {
+        $data = ['menu' => $this->input->post('menu')];
+
+        $this->db->update('user_menu', $data, ['id' => $this->input->post('id')]);
+        $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">
+        Edit menu success
+        </div>');
+        redirect('menu');
+    }
+
+
+    public function deleteMenu($id)
+    {
+        $this->db->delete('user_menu', ['id' => $id]);
         $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">
         Delete menu success
         </div>');
         redirect('menu');
     }
 
-    public function edit($id)
-    {
-        $this->MenuManagement_model->edit($id);
-        $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">
-        Edit menu success
-        </div>');
-        redirect('menu');
-    }
 
     public function subMenu()
     {
@@ -84,7 +95,31 @@ class Menu extends CI_Controller
             $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">
             Add SubMenu success
             </div>');
-            redirect('menu');
+            redirect('menu/subMenu');
         }
+    }
+
+    public function deleteSubMenu($id)
+    {
+        $this->db->delete('user_sub_menu', ['id' => $id]);
+
+        $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">
+            Delete SubMenu success
+            </div>');
+        redirect('menu/subMenu');
+    }
+
+    public function getSubMenu()
+    {
+        echo json_encode($this->db->get_where('user_sub_menu', ['id' => $this->input->post_get('id')])->row_array());
+    }
+
+    public function editSubMenu()
+    {
+        $this->MenuManagement_model->editSubMenu();
+        $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">
+        Edit menu success
+        </div>');
+        redirect('menu/subMenu');
     }
 }

@@ -10,6 +10,7 @@ function check_access()
     } else {
         $roleId = $ci->session->userdata('role_id');
         $menu = $ci->uri->segment(1);
+
         $queryMenu = $ci->db->get_where('user_menu', ['menu' => $menu])->row_array();
         $menuId = $queryMenu['id'];
 
