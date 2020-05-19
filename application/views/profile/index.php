@@ -3,10 +3,15 @@
 
     <!-- Page Heading -->
     <h1 class="h3 mb-4 text-gray-800">My Profile</h1>
+    <div class="row">
+        <div class="col-md-7">
+            <?= $this->session->flashdata('editProfile') ?>
+        </div>
+    </div>
     <div class="card mb-3" style="max-width: 540px;">
         <div class="row no-gutters">
             <div class="col-md-4">
-                <img src="<?= base_url('assets/img/') . $user['image'] ?>" class="card-img" style="max-width: 200px; max-height: 200px;">
+                <img src="<?= base_url('assets/img/profile/') . $user['image'] ?>" class="card-img" style="max-width: 200px; max-height: 200px;">
             </div>
             <div class="col-md-8">
                 <div class="card-body">
