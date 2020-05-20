@@ -5,7 +5,7 @@
     <h1 class="h3 mb-4 text-gray-800"><?= $title ?></h1>
 
     <?= form_open_multipart('profile/edit'); ?>
-    <div class="form-group row co">
+    <div class="form-group row">
         <label for="email" class="col-sm-2 col-form-label">Email</label>
         <div class="col-sm-6">
             <input readonly class="form-control-plaintext" id="email" name="email" value="<?= $user['email'] ?>">

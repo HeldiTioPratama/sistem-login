@@ -7,6 +7,11 @@ class Auth extends CI_Controller
     // untuk methdoe dafault Auth dan sekaligus halaman login
     public function index()
     {
+        // agar yang sudah login tidak bisa kehalaman login kecuali logout dahulu
+        if ($this->session->userdata('email')) {
+            $role = $this->db->get_where('user_role', ['id' => $this->session->userdata('role_id')])->row_array();
+            redirect($role['role']);
+        }
         // cek validasi form sesuai rules
         $this->form_validation->set_rules('email', 'Email', 'required|trim|valid_email');
         $this->form_validation->set_rules('password', 'Email', 'required|trim');
@@ -86,6 +91,11 @@ class Auth extends CI_Controller
     // untuk registrasi
     public function registration()
     {
+        // agar yang sudah login tidak bisa kehalaman restrasi kecuali logout dahulu
+        if ($this->session->userdata('email')) {
+            $role = $this->db->get_where('user_role', ['id' => $this->session->userdata('role_id')])->row_array();
+            redirect($role['role']);
+        }
         // cek validasi form sesuai rules
         $this->form_validation->set_rules('name', 'Name', 'required|trim');
         $this->form_validation->set_rules(
@@ -99,10 +109,10 @@ class Auth extends CI_Controller
         $this->form_validation->set_rules(
             'password1',
             'Password',
-            'required|trim|matches[password2]|min_length[3]',
+            'required|trim|matches[password2]|min_length[6]',
             [
                 'matches' => "Password don't match!",
-                "min_length" => "Password min 3 character"
+                "min_length" => "Password min 6 character"
             ]
         );
         $this->form_validation->set_rules('password2', 'Password', 'trim|matches[password1]');

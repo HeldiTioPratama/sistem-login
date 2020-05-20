@@ -71,4 +71,66 @@ class Profile extends CI_Controller
             redirect('profile');
         }
     }
+
+    public function changePassword()
+    {
+        $data['user'] = $this->db->get_where('user', ['email' => $this->session->userdata('email')])->row_array();
+        $data['title'] = 'Change Password';
+
+        // untuk rules new password
+        $this->form_validation->set_rules('current_password', 'Current Password', 'required|trim');
+        $this->form_validation->set_rules(
+            'new_password1',
+            'New Password',
+            'required|trim|min_length[6]|matches[new_password2]'
+        );
+        $this->form_validation->set_rules(
+            'new_password2',
+            'Confirm New Password',
+            'required|trim|matches[new_password2]'
+        );
+
+        if ($this->form_validation->run() == false) {
+            $this->load->view('template/header', $data);
+            $this->load->view('template/sidebar', $data);
+            $this->load->view('template/topbar', $data);
+            $this->load->view('profile/changepassword', $data);
+            $this->load->view('template/copyright', $data);
+            $this->load->view('template/footer');
+        } else {
+            $currentPassword = $this->input->post('current_password');
+            $newPassword = $this->input->post('new_password1');
+
+            // cek password lama sama dengan di hash db
+            if (password_verify($currentPassword, $data['user']['password'])) {
+
+                //cek apakah password lama sama dengan yang baru
+                if ($newPassword != $currentPassword) {
+                    $data = [
+                        'password' => password_hash($newPassword, PASSWORD_DEFAULT)
+                    ];
+
+                    $this->db->update('user', $data, ['email' => $this->session->userdata('email')]);
+                    $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">
+                    Password success change
+                    </div>');
+                    redirect('profile/changepassword');
+                }
+                // jika password baru sama dengan password lama
+                else {
+                    $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">
+                    New passwords cannot be the same current passowrd
+                    </div>');
+                    redirect('profile/changepassword');
+                }
+            }
+            // jika password lama tidak sama dengan hash db
+            else {
+                $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">
+                Wrong current password
+                </div>');
+                redirect('profile/changepassword');
+            }
+        }
+    }
 }
