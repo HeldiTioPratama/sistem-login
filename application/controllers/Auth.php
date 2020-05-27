@@ -74,7 +74,7 @@ class Auth extends CI_Controller
                 // jika email dan akunnya belum di aktivasi
             } else {
                 $this->session->set_flashdata('message', '<div class="alert alert-warning" role="alert">
-                    Your account is not active, please activate your account via email link
+                    Your account is not active, please activate your account via email link, if you don\'t receive the email <a href="' . base_url('auth/resendtoken') . '"> Klik this link to resend email activation account</a>
                  </div>');
                 redirect('auth');
             }
@@ -128,11 +128,135 @@ class Auth extends CI_Controller
         } else {
             $this->User_model->inputUser();
 
-            $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">
-            Thanks for your registration, Please login!
+            // siapkan token
+            $token = base64_encode(random_bytes(32));
+            $this->User_model->createdToken($token);
+
+            // kirim email
+            $this->_sendEmail($token, 'verify');
+
+            // tampilkan pesan 
+            $this->session->set_flashdata('message', '<div class="alert alert-warning" role="alert">
+            Thanks for your registration, Please activate your account!, if you don\'t receive the email <a href="' . base_url('auth/resendtoken') . '"> Klik this link to resend email activation account</a>
             </div>');
             redirect('auth');
         }
+    }
+
+    // configurasi kirim email
+    private function _sendEmail($token, $type)
+    {
+
+        // ini diambil dari input user registrasi
+        $email = $this->input->post('email');
+        $name = $this->input->post('name');
+
+        // konfigurasi smtp email googlemail
+        $config = [
+            'protocol'  => 'smtp',
+            'smtp_host' => 'ssl://smtp.googlemail.com',
+            'smtp_user' => 'sistemperpus@gmail.com',
+            'smtp_pass' => 'sistemperpus99',
+            'smtp_port' => 465,
+            'mailtype'  => 'html',
+            'charset'   => 'utf-8',
+            'newline'   => "\r\n"
+
+        ];
+
+        // inisialisasi email
+        $this->email->initialize($config);
+
+        // untuk load library email
+        $this->load->library('email', $config);
+
+        // untuk email pengirim dan email tujuan
+        $this->email->from('sistemperpus@gmail.com', 'Sistem Perpustakaan');
+        $this->email->to($email);
+
+        // untuk cek type type diambil dari argument function
+        if ($type == 'verify') {
+            // subjek dan pesan email  urlencode untuk mengkonvert karakter atau string ke dalam bentuk format karakter URL yang valid
+            $this->email->subject('Account verification');
+            $this->email->message('
+            <h3>Halo ' . $name . '</h3>
+            <p>Terimakasih telah mendaftar akun diperpustakaan online</p>
+            <p>Silahkan klik tautan atau link berikut untuk mengaktifkan akun anda</p>
+            <a href="' . base_url() . 'Auth/verify?email=' . $email . '&token=' . urlencode($token) . '">Klik untuk aktifkan akun</a>
+        ');
+        }
+
+        // kondisi dimana untuk menampikan error jika ada kesalahan
+        if ($this->email->send()) {
+            return true;
+        } else {
+            echo $this->email->print_debugger();
+            die;
+        }
+    }
+
+    // function untuk verify token pada email
+    public function verify()
+    {
+        // ini diambil dari url link pada email
+        $email = $this->input->get('email');
+        $token = $this->input->get('token');
+
+        // untuk ambil data user yang memiliki email apakah sudah ada atau belum
+        $user_activation_email = $this->db->get_where('user_activation', ['email' => $email])->row_array();
+
+        if ($user_activation_email) {
+            // untuk mengambil token apakah pada table
+            $user_activation_token = $this->db->get_where('user_activation', ['token' => $token])->row_array();
+
+            if ($user_activation_token) {
+                // untuk cek apakah token expired atau belum
+                if (time() - $user_activation_token['date_created'] < (60 * 3)) {
+
+                    // jika belum expired update data yang emailnya sudah diactivated
+                    $this->db->set('is_active', 1);
+                    $this->db->where('email', $email);
+                    $this->db->update('user');
+
+                    // hapus semua data token dan emailnya di db jika sudah diaktivasi
+                    $this->db->delete('user_activation', ['email' => $email]);
+
+                    // tampilkan pesan
+                    $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">
+                    Activation account success, ' . $email . ' has been activaved, please login
+                    </div>');
+
+                    redirect('auth');
+                } else {
+                    // tampilkan pesan token expired
+                    $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">
+                    Activation account failed!, token expaired <a href="' . base_url('auth/resendToken') . '"> Klik this link to resend email activation account</a>
+                    </div>');
+
+                    redirect('auth');
+                }
+            } else {
+                // tampilkan pesan token salah
+                $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">
+            Activation account failed!, token wrong! please check your email and click link
+            </div>');
+
+                redirect('auth');
+            }
+        } else {
+            // tampilkan pesan email salah
+            $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">
+            Activation account failed!, please check your email is valid
+            </div>');
+
+            redirect('auth');
+        }
+    }
+
+    // ini function untuk fitur resend token aktivasi
+    public function resendToken()
+    {
+        echo 'okeee';
     }
 
     // untuk logout
