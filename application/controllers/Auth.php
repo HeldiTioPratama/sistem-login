@@ -184,6 +184,14 @@ class Auth extends CI_Controller
             <p>Silahkan klik tautan atau link berikut untuk mengaktifkan akun anda</p>
             <a href="' . base_url() . 'Auth/verify?email=' . $email . '&token=' . urlencode($token) . '">Klik untuk aktifkan akun</a>
         ');
+        } else if ($type == 'forgot') {
+            $this->email->subject('Reset password');
+            $this->email->message('
+            <h3>Halo ' . $name . '</h3>
+            <p>Terimakasih telah menggunakan perpustakaan online</p>
+            <p>Silahkan klik tautan atau link berikut untuk mereset password anda</p>
+            <a href="' . base_url() . 'Auth/resetpassword?email=' . $email . '&token=' . urlencode($token) . '">Klik untuk reset password</a>
+        ');
         }
 
         // kondisi dimana untuk menampikan error jika ada kesalahan
@@ -203,15 +211,15 @@ class Auth extends CI_Controller
         $token = $this->input->get('token');
 
         // untuk ambil data user yang memiliki email apakah sudah ada atau belum
-        $user_activation_email = $this->db->get_where('user_activation', ['email' => $email])->row_array();
+        $user_activation_email = $this->db->get_where('user_token', ['email' => $email])->row_array();
 
         if ($user_activation_email) {
             // untuk mengambil token apakah pada table
-            $user_activation_token = $this->db->get_where('user_activation', ['token' => $token])->row_array();
+            $user_activation_token = $this->db->get_where('user_token', ['token' => $token])->row_array();
 
             if ($user_activation_token) {
                 // untuk cek apakah token expired atau belum
-                if (time() - $user_activation_token['date_created'] < (60 * 3)) {
+                if (time() - $user_activation_token['date_created'] < (60 * 60)) {
 
                     // jika belum expired update data yang emailnya sudah diactivated
                     $this->db->set('is_active', 1);
@@ -287,5 +295,105 @@ class Auth extends CI_Controller
         $this->load->view('template/header', $data);
         $this->load->view('auth/blocked', $data);
         $this->load->view('template/footer');
+    }
+
+    public function forgotPassword()
+    {
+        $this->form_validation->set_rules('email', 'Email', 'trim|required|valid_email');
+        if ($this->form_validation->run() == false) {
+            $data['title'] = 'Forgot password';
+            $this->load->view('template/header', $data);
+            $this->load->view('auth/forgot_password');
+            $this->load->view('template/footer');
+        } else {
+            $email = $this->input->post('email');
+            $user = $this->db->get_where('user', ['email' => $email, 'is_active' => 1])->row_array();
+
+            if ($user) {
+                $token = base64_encode(random_bytes(32));
+                $this->User_model->createdToken($token);
+
+                $this->_sendEmail($token, 'forgot');
+
+                $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">
+                Please cek your email to reset password
+                </div>');
+
+                redirect('auth/forgotpassword');
+            } else {
+                $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">
+                Your account not register or activated
+                </div>');
+
+                redirect('auth/forgotpassword');
+            }
+        }
+    }
+
+    public function resetpassword()
+    {
+        $email = $this->input->get('email');
+        $token = $this->input->get('token');
+
+        $user = $this->db->get_where('user_token', ['email' => $email])->row_array();
+
+        if ($user) {
+            $user_token = $this->db->get_where('user_token', ['token' => $token])->row_array();
+            if ($user_token) {
+                if (time() - $user_token['date_created'] < 60 * 60) {
+                    $this->session->set_userdata('reset_password', $email);
+                    $this->changePassword();
+                } else {
+                    $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">
+                    Token expired!
+                    </div>');
+                    redirect('auth/forgotpassword');
+                }
+            } else {
+                $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">
+                Token is wrong!
+                </div>');
+                redirect('auth/forgotpassword');
+            }
+        } else {
+            $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">
+            Email is wrong!
+            </div>');
+
+            redirect('auth/forgotpassword');
+        }
+    }
+
+    public function changePassword()
+    {
+        if (!$this->session->userdata('reset_password')) {
+            redirect('auth');
+        }
+
+        $email = $this->session->userdata('reset_password');
+        $this->form_validation->set_rules('password1', 'Password', 'required|trim|min_length[6]|matches[password2]');
+        $this->form_validation->set_rules('password2', 'Repeat password', 'required|trim|matches[password2]');
+
+        if ($this->form_validation->run() == false) {
+            $data['title'] = 'Forgot password';
+            $data['email'] = $email;
+            $this->load->view('template/header', $data);
+            $this->load->view('auth/change_password', $data);
+            $this->load->view('template/footer');
+        } else {
+            $password = password_hash($this->input->post('password1'), PASSWORD_DEFAULT);
+
+            $this->db->set('password', $password);
+            $this->db->where('email', $email);
+            $this->db->update('user');
+
+            $this->session->unset_userdata('reset_password');
+
+            $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">
+            Change password success
+            </div>');
+
+            redirect('auth');
+        }
     }
 }

@@ -27,6 +27,6 @@ class User_model extends CI_Model
             'date_created' => time()
         ];
 
-        $this->db->insert('user_activation', $data);
+        $this->db->insert('user_token', $data);
     }
 }

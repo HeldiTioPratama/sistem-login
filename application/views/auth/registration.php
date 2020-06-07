@@ -34,7 +34,7 @@
                             </form>
                             <hr>
                             <div class="text-center">
-                                <a class="small" href="forgot-password.html">Forgot Password?</a>
+                                <a class="small" href="<?= base_url('auth/forgotpassword') ?>">Forgot Password?</a>
                             </div>
                             <div class="text-center">
                                 <a class="small" href="<?= base_url('auth') ?>">Already have an account? Login!</a>
