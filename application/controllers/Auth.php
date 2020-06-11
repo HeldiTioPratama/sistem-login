@@ -297,6 +297,7 @@ class Auth extends CI_Controller
         $this->load->view('template/footer');
     }
 
+    // untuk form forgot password sekaligus mengirim email
     public function forgotPassword()
     {
         $this->form_validation->set_rules('email', 'Email', 'trim|required|valid_email');
@@ -315,7 +316,7 @@ class Auth extends CI_Controller
 
                 $this->_sendEmail($token, 'forgot');
 
-                $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">
+                $this->session->set_flashdata('message', '<div class="alert alert-warning" role="alert">
                 Please cek your email to reset password
                 </div>');
 
@@ -330,17 +331,21 @@ class Auth extends CI_Controller
         }
     }
 
+    // untuk cek validasi email dan token dari email
     public function resetpassword()
     {
+        // diambil dari url get pada email
         $email = $this->input->get('email');
         $token = $this->input->get('token');
 
+        // query ke user token 
         $user = $this->db->get_where('user_token', ['email' => $email])->row_array();
 
         if ($user) {
             $user_token = $this->db->get_where('user_token', ['token' => $token])->row_array();
             if ($user_token) {
                 if (time() - $user_token['date_created'] < 60 * 60) {
+                    // session untuk masuk ke methode change pasword tanpa ini tidak akan bisa
                     $this->session->set_userdata('reset_password', $email);
                     $this->changePassword();
                 } else {
@@ -364,12 +369,14 @@ class Auth extends CI_Controller
         }
     }
 
+    // untuk mengubah password
     public function changePassword()
     {
         if (!$this->session->userdata('reset_password')) {
             redirect('auth');
         }
 
+        // didapat dari session reset password
         $email = $this->session->userdata('reset_password');
         $this->form_validation->set_rules('password1', 'Password', 'required|trim|min_length[6]|matches[password2]');
         $this->form_validation->set_rules('password2', 'Repeat password', 'required|trim|matches[password2]');
@@ -381,12 +388,19 @@ class Auth extends CI_Controller
             $this->load->view('auth/change_password', $data);
             $this->load->view('template/footer');
         } else {
+            // untuk hash password
             $password = password_hash($this->input->post('password1'), PASSWORD_DEFAULT);
 
+            // untuk update password
             $this->db->set('password', $password);
             $this->db->where('email', $email);
             $this->db->update('user');
 
+            //untuk hapus token
+
+            $this->db->delete('user_token', ['email' => $email]);
+
+            // menghapus session
             $this->session->unset_userdata('reset_password');
 
             $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">
