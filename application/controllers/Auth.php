@@ -73,9 +73,8 @@ class Auth extends CI_Controller
 
                 // jika email dan akunnya belum di aktivasi
             } else {
-                $this->session->set_userdata('resendEmail', 'activation');
                 $this->session->set_flashdata('message', '<div class="alert alert-warning" role="alert">
-                    Your account is not active, please activate your account via email link, if you don\'t receive the email <a href="' . base_url('auth/resendEmail?tipe=activation') . '"> Click this link to resend email activation account</a>
+                    Your account is not active, please activate your account via email link, if you don\'t receive the email <a href="' . base_url('auth/resendEmail') . '"> Click this link to resend email activation account</a>
                  </div>');
                 redirect('auth');
             }
@@ -138,7 +137,6 @@ class Auth extends CI_Controller
 
             // tampilkan pesan 
 
-            $this->session->set_userdata('resendEmail', 'activation');
             $this->session->set_flashdata('message', '<div class="alert alert-warning" role="alert">
             Thanks for your registration, Please activate your account!, if you don\'t receive the email <a href="' . base_url('auth/resendEmail') . '"> Click this link to resend email activation account</a>
             </div>');
@@ -218,7 +216,7 @@ class Auth extends CI_Controller
         $token = $this->input->get('token');
 
         // untuk ambil data user yang memiliki email apakah sudah ada atau belum
-        $user_activation_email = $this->db->get_where('user_token', ['email' => $email])->row_array();
+        $user_activation_email = $this->db->get_where('user', ['email' => $email])->row_array();
 
         if ($user_activation_email) {
             // untuk mengambil token apakah pada table
@@ -234,7 +232,7 @@ class Auth extends CI_Controller
                     $this->db->update('user');
 
                     // hapus semua data token dan emailnya di db jika sudah diaktivasi
-                    $this->db->delete('user_activation', ['email' => $email]);
+                    $this->db->delete('user_token', ['email' => $email]);
 
                     // tampilkan pesan
                     $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">
@@ -243,11 +241,11 @@ class Auth extends CI_Controller
 
                     redirect('auth');
                 } else {
-                    // tampilkan pesan token expired
+                    $this->db->delete('user_token', ['email' => $email]);
 
-                    $this->session->set_userdata('resendEmail', 'activation');
+                    // tampilkan pesan token expired
                     $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">
-                    Activation account failed!, token expaired <a href="' . base_url('auth/resendEmail') . '"> Click this link to resend email activation account</a>
+                    Activation account failed!, token expired <a href="' . base_url('auth/resendEmail') . '"> Click this link to resend email activation account</a>
                     </div>');
 
                     redirect('auth');
@@ -255,8 +253,8 @@ class Auth extends CI_Controller
             } else {
                 // tampilkan pesan token salah
                 $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">
-            Activation account failed!, token wrong! please check your email and click link
-            </div>');
+                    Activation account failed!, token wrong or expired please check your email, if you don\'t receive the email <a href="' . base_url('auth/resendEmail') . '"> Click this link to resend email activation account</a>
+                    </div>');
 
                 redirect('auth');
             }
@@ -273,17 +271,57 @@ class Auth extends CI_Controller
     // ini function untuk fitur resend token aktivasi
     public function resendEmail()
     {
-
-        if ($this->input->get('tipe')) {
-            if ($this->form_validation->run() == false) {
-                $data['title'] = 'Resend email';
-                $this->load->view('template/header', $data);
-                $this->load->view('auth/resend_email');
-                $this->load->view('template/footer');
-            } else {
-            }
+        $this->form_validation->set_rules('email', 'Email', 'trim|required|valid_email');
+        if ($this->form_validation->run() == false) {
+            $data['title'] = 'Resend email';
+            $this->load->view('template/header', $data);
+            $this->load->view('auth/resend_email');
+            $this->load->view('template/footer');
         } else {
-            redirect('auth');
+            $email = $this->input->post('email');
+            $user = $this->db->get_where('user', ['email' => $email])->row_array();
+            $userToken = $this->db->get_where('user_token', ['email' => $email])->row_array();
+
+            if ($user) {
+                if ($user['is_active'] == 0) {
+                    if ($userToken) {
+                        // kirim email dengan toke lama belum expired
+                        $this->_sendEmail($userToken['token'], 'verify');
+
+                        // tampilkan pesan 
+                        $this->session->set_flashdata('message', '<div class="alert alert-warning" role="alert">
+                            Please check your email to activate your account!, if you don\'t receive the email <a href="' . base_url('auth/resendEmail') . '"> Click this link to resend email activation </a>
+                            </div>');
+                        redirect('auth');
+                    } else {
+                        $this->User_model->inputUser();
+
+                        // siapkan token
+                        $token = base64_encode(random_bytes(32));
+                        $this->User_model->createdToken($token);
+
+                        // kirim email
+                        $this->_sendEmail($token, 'verify');
+
+                        // tampilkan pesan 
+
+                        $this->session->set_flashdata('message', '<div class="alert alert-warning" role="alert">
+                            Please check your email to activate your account!, if you don\'t receive the email <a href="' . base_url('auth/resendEmail') . '"> Click this link to resend email activation account</a>
+                            </div>');
+                        redirect('auth');
+                    }
+                } else {
+                    $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">
+                    Your account has been active, please login
+                    </div>');
+                    redirect('auth');
+                }
+            } else {
+                $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">
+                    Your email has not been registered, please register
+                    </div>');
+                redirect('auth');
+            }
         }
     }
 
@@ -329,20 +367,26 @@ class Auth extends CI_Controller
         } else {
             $email = $this->input->post('email');
             $user = $this->db->get_where('user', ['email' => $email, 'is_active' => 1])->row_array();
-
+            $userToken = $this->db->get_where('user_token', ['email' => $email])->row_array();
+            $tokenLama = $userToken['token'];
             if ($user) {
-                $token = base64_encode(random_bytes(32));
-                $this->User_model->createdToken($token);
+                if ($userToken) {
+                    $this->_sendEmail($tokenLama, 'forgot');
+                    $this->session->set_flashdata('message', '<div class="alert alert-warning" role="alert">
+                        Please cek your email to reset password, if you don\'t receive the email please repeat the steps forgot password  
+                        </div>');
+                    redirect('auth/forgotpassword');
+                } else {
+                    $token = base64_encode(random_bytes(32));
+                    $this->User_model->createdToken($token);
 
-                $this->_sendEmail($token, 'forgot');
+                    $this->_sendEmail($token, 'forgot');
 
-                $this->session->set_userdata('resendEmail', 'forgotpass');
-                $this->session->set_flashdata('message', '<div class="alert alert-warning" role="alert">
-                Please cek your email to reset password <a href="' . base_url('auth/resendEmail') . '"> 
-                Click here if you don\'t receive the email </a>
-                </div>');
-
-                redirect('auth/forgotpassword');
+                    $this->session->set_flashdata('message', '<div class="alert alert-warning" role="alert">
+                    Please cek your email to reset password, if you don\'t receive the email please repeat the steps forgot password  
+                    </div>');
+                    redirect('auth/forgotpassword');
+                }
             } else {
                 $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">
                 Your account not register or activated
@@ -366,17 +410,16 @@ class Auth extends CI_Controller
         if ($user) {
             $user_token = $this->db->get_where('user_token', ['token' => $token])->row_array();
             if ($user_token) {
-                if (time() - $user_token['date_created'] < 60 * 60) {
+                if (time() - $user_token['date_created'] < 60 * 10) {
                     // session untuk masuk ke methode change pasword tanpa ini tidak akan bisa
                     $this->session->set_userdata('reset_password', $email);
                     $this->changePassword();
                 } else {
-
-                    $this->session->set_userdata('resendEmail', 'forgotpass');
                     $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">
-                    Please cek your email to reset password <a href="' . base_url('auth/resendEmail') . '"> 
-                    Click here if you don\'t receive the email </a>
+                    Token expired please repeat steps to forgot password
                     </div>');
+
+                    $this->db->delete('user_token', ['email' => $email]);
                     redirect('auth/forgotpassword');
                 }
             } else {
@@ -387,7 +430,7 @@ class Auth extends CI_Controller
             }
         } else {
             $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">
-            Email is wrong!
+            Failed!, Email is wrong or token has already been used
             </div>');
 
             redirect('auth/forgotpassword');

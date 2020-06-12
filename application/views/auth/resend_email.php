@@ -12,7 +12,7 @@
                             <div class="col-md-10 col-lg-10 col-sm-10 col- mx-auto">
                                 <div class="p-5">
                                     <div class="text-center">
-                                        <h1 class="h4 text-gray-900 mb-4">Resend Email</h1>
+                                        <h1 class="h4 text-gray-900 mb-4">Resend Email Activation</h1>
                                     </div>
                                     <form class="user" method="post" action="<?= base_url('auth/resendEmail') ?>">
                                         <div class="form-group">
@@ -20,7 +20,7 @@
                                             <?= form_error('email', '<small class="text-danger pl-4 mt-1">', '</small>') ?>
                                         </div>
                                         <button type="submit" name="button" class="btn btn-primary btn-user btn-block">
-                                            Send email
+                                            Send email activation
                                         </button>
                                     </form>
                                     <hr>
