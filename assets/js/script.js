@@ -100,6 +100,42 @@ $(function () {
     $('.custom-file-input').on('change', function () {
         let fileName = $(this).val().split('\\').pop();
         $('.custom-file-label').html(fileName);
-    })
+    });
+
+
+    // untuk ubah role name
+
+    $('.addNewRole').on('click', function () {
+        $('#formRoleLabel').html('Add new role')
+        $('.modal-footer button[type=submit]').html('Add role');
+        $('.modal-body form').attr('action', 'http://localhost/admin/role');
+        $('.modal-footer button[type=submit]').removeClass('btn btn-warning');
+        $('.modal-footer button[type=submit]').addClass('btn btn-primary');
+        $('.modal-body form')[0].reset();
+    });
+
+
+
+    $('.editRole').on('click', function () {
+        $('#formRoleLabel').html('Edit role')
+        $('.modal-footer button[type=submit]').html('Edit role');
+        $('.modal-body form').attr('action', 'http://localhost/admin/editRole');
+        $('.modal-footer button[type=submit]').addClass('btn btn-warning');
+
+        const menuId = $(this).data('id');
+
+        $.ajax({
+            url: "http://localhost/login/menu/getMenu",
+            data: { id: menuId },
+            methode: 'post',
+            dataType: 'json',
+            success: function (data) {
+
+                $('#id').val(data.id);
+                $('#menu').val(data.menu);
+            }
+        });
+    });
+
 
 })
