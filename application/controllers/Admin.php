@@ -84,4 +84,26 @@ class Admin extends CI_Controller
           change role access success
             </div>');
     }
+
+    public function getRole()
+    {
+        $roleId = $this->input->post_get('id');
+        $role = $this->db->get_where('user_role', ['id' => $roleId])->row_array();
+        echo json_encode($role);
+    }
+
+    public function editRole()
+    {
+        $roleId = $this->input->post('id');
+        $role = $this->input->post('role');
+
+        $this->db->set('role', $role);
+        $this->db->where('id', $roleId);
+        $this->db->update('user_role');
+
+        $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">
+          Edit role success
+            </div>');
+        redirect('admin/role');
+    }
 }

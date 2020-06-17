@@ -40,6 +40,7 @@
     </div>
 
 </div>
+</div>
 <!-- /.container-fluid -->
 
 <!-- Modal Add New Menu -->
@@ -56,8 +57,9 @@
             <div class="modal-body">
                 <form action="<?= base_url('admin/role') ?>" method="post">
                     <div class="form-group">
+                        <input hidden name='id' id="roleId">
                         <label for="role">Role</label>
-                        <input type="text" class="form-control" id="role" name="role" placeholder="Role name">
+                        <input type="text" class="form-control" id="role" name="role" placeholder="Role name" required>
                     </div>
 
                     <div class="modal-footer">

@@ -108,7 +108,7 @@ $(function () {
     $('.addNewRole').on('click', function () {
         $('#formRoleLabel').html('Add new role')
         $('.modal-footer button[type=submit]').html('Add role');
-        $('.modal-body form').attr('action', 'http://localhost/admin/role');
+        $('.modal-body form').attr('action', 'http://localhost/login/admin/role');
         $('.modal-footer button[type=submit]').removeClass('btn btn-warning');
         $('.modal-footer button[type=submit]').addClass('btn btn-primary');
         $('.modal-body form')[0].reset();
@@ -117,22 +117,21 @@ $(function () {
 
 
     $('.editRole').on('click', function () {
-        $('#formRoleLabel').html('Edit role')
+        const roleId = $(this).data('id');
+
+        $('#formRoleLabel').html('Edit role');
+        $('#roleId').val(roleId);
         $('.modal-footer button[type=submit]').html('Edit role');
-        $('.modal-body form').attr('action', 'http://localhost/admin/editRole');
+        $('.modal-body form').attr('action', 'http://localhost/login/admin/editRole');
         $('.modal-footer button[type=submit]').addClass('btn btn-warning');
 
-        const menuId = $(this).data('id');
-
         $.ajax({
-            url: "http://localhost/login/menu/getMenu",
-            data: { id: menuId },
+            url: "http://localhost/login/admin/getRole",
+            data: { id: roleId },
             methode: 'post',
             dataType: 'json',
             success: function (data) {
-
-                $('#id').val(data.id);
-                $('#menu').val(data.menu);
+                $('#role').val(data.role);
             }
         });
     });
